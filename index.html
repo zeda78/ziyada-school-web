@@ -94,7 +94,7 @@
             </div>
             <div id="gallery-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="col-span-1 md:col-span-3 text-center py-10 text-slate-500 font-bold">
-                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال بالبيانات الحية...
+                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري جلب الصور من قاعدة البيانات...
                 </div>
             </div>
         </div>
@@ -141,7 +141,7 @@
         </div>
     </footer>
 
-    <!-- محرك الجسر الآمن لـ GitHub -->
+    <!-- محرك جلب البيانات المباشر والسريع -->
     <script>
         function cleanDriveLink(url) {
             if (!url) return '';
@@ -176,17 +176,16 @@
             return entries.map(e => e.replace(/^"|"$/g, '').trim());
         }
 
-        // الرابط الفعلي الخاص بك مدمجاً بـ (الجسر الآمن) لتخطي حظر جيت-هاب
+        // الرابط المباشر لجوجل شيت
         const rawCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
 
         async function loadLiveGallery() {
             const container = document.getElementById('gallery-container');
             try {
-                // استخدام الجسر الآمن AllOrigins
-                const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawCsvUrl + "&t=" + Date.now());
-                const res = await fetch(proxyUrl);
+                // اتصال مباشر بدون وسطاء لأن الموقع مرفوع رسمياً
+                const res = await fetch(rawCsvUrl, { cache: 'no-store' });
                 
-                if (!res.ok) throw new Error("Connection Blocked");
+                if (!res.ok) throw new Error("Network Response Failed");
                 
                 const csvText = await res.text();
                 const cleanText = csvText.replace(/\r/g, ''); 
@@ -229,9 +228,10 @@
                     `;
                     container.insertAdjacentHTML('beforeend', card);
                 }
-                if (validCount === 0) container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً...</div>`;
+                if (validCount === 0) container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً... أضف صوراً جديدة لتبدأ بالظهور هنا.</div>`;
             } catch (err) {
-                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">جاري الاتصال... يرجى تحديث الصفحة.</div>`;
+                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">حدث خطأ في جلب البيانات. يرجى التأكد من رابط جوجل شيت.</div>`;
+                console.error(err);
             }
         }
         window.onload = loadLiveGallery;
