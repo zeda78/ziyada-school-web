@@ -26,7 +26,7 @@
             <div class="flex items-center gap-3">
                 <span><i class="fa-solid fa-location-dot text-gold ml-1"></i> طرابلس، ليبيا</span>
                 <span class="text-blue-400">|</span>
-                <span><i class="fa-solid fa-clock text-gold ml-1"></i> الدوام: 8:00 ص - 2:00 م</span>
+                <span><i class="fa-solid fa-clock text-gold ml-1"></i> الدوام: 8:00 ص - 1:30 م</span>
             </div>
             <div class="flex items-center gap-4">
                 <a href="tel:0925410032" class="hover:text-gold transition font-bold" dir="ltr">092 541 0032 <i class="fa-solid fa-phone text-gold"></i></a>
@@ -91,7 +91,7 @@
             </div>
             <div id="gallery-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="col-span-1 md:col-span-3 text-center py-10 text-slate-500 font-bold">
-                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري جلب البيانات من شيت المدرسة...
+                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال المباشر بقاعدة البيانات...
                 </div>
             </div>
         </div>
@@ -172,69 +172,75 @@
             return entries.map(e => e.replace(/^"|"$/g, '').trim());
         }
 
-        // تم استخدام الـ ID الأصلي للشيت الخاص بك والربط عبر Google API لضمان عدم الحظر
-        const sheetId = "17c-vOPL1SYs-y9WA5laAvINBXo3TMHQPhMgBvTtLb6g";
-        const apiCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+        const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
 
         async function loadLiveGallery() {
             const container = document.getElementById('gallery-container');
+            let csvText = '';
+
             try {
-                // إضافة متغير وقت لكسر الكاش (تحديث فوري)
-                const res = await fetch(apiCsvUrl + "&t=" + Date.now(), { cache: 'no-store' });
-                
-                if (!res.ok) throw new Error("Google API Blocked");
-                
-                const csvText = await res.text();
-                const cleanText = csvText.replace(/\r/g, ''); 
-                const rawLines = cleanText.split('\n');
-
-                container.innerHTML = ''; 
-                let validCount = 0;
-
-                // تجاوز السطر الأول (عناوين الأعمدة)
-                for (let i = 1; i < rawLines.length; i++) {
-                    if (!rawLines[i] || rawLines[i].trim() === '') continue;
-                    const row = splitCsvRow(rawLines[i]);
-                    if (row.length < 2) continue;
-
-                    let date = row[0] || '';
-                    let cat = row[1] || '';
-                    let title = row[2] || '';
-                    let imgLink = '';
-
-                    for (let cell of row) {
-                        if (cell && (cell.includes('http') || cell.includes('drive.google'))) {
-                            imgLink = cleanDriveLink(cell);
-                        }
-                    }
-
-                    if (!title && cat.length > 8) { title = cat; cat = 'تغطية مصورة'; }
-                    if (!title || !imgLink) continue;
-
-                    validCount++;
-                    const bColor = getBadgeColor(cat);
-
-                    const card = `
-                        <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 group">
-                            <div class="h-60 overflow-hidden relative bg-slate-100">
-                                <img src="${imgLink}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop'">
-                                <span class="absolute top-3 right-3 ${bColor} text-white text-xs font-bold px-3 py-1 rounded-full">${cat}</span>
-                                ${date ? `<span class="absolute bottom-3 left-3 bg-black/70 text-white text-[11px] px-2 py-0.5 rounded">${date}</span>` : ''}
-                            </div>
-                            <div class="p-5"><h3 class="font-black text-lg text-slate-800">${title}</h3></div>
-                        </div>
-                    `;
-                    container.insertAdjacentHTML('beforeend', card);
-                }
-                
-                if (validCount === 0) {
-                    container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً... أضف صوراً في شيت جوجل لتبدأ بالظهور هنا.</div>`;
-                }
+                // المحاولة الأولى: اتصال هادئ ومباشر بجوجل
+                const res = await fetch(sheetCsvUrl + "&_cb=" + new Date().getTime());
+                if (!res.ok) throw new Error("Direct fetch failed");
+                csvText = await res.text();
             } catch (err) {
-                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">حدث خطأ في الاتصال بقاعدة البيانات. يرجى التأكد من أن إعدادات الشيت هي (أي شخص لديه الرابط).</div>`;
-                console.error("Fetch Error: ", err);
+                try {
+                    // المحاولة الثانية: استخدام الوسيط السحابي إذا اعترضنا جيت-هاب
+                    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(sheetCsvUrl + "&_cb=" + new Date().getTime());
+                    const resProxy = await fetch(proxyUrl);
+                    if (!resProxy.ok) throw new Error("Proxy fetch failed");
+                    csvText = await resProxy.text();
+                } catch (errProxy) {
+                    container.innerHTML = `<div class="col-span-3 text-center bg-red-50 border border-red-200 text-red-800 font-bold p-6 rounded-xl">
+                        ⚠️ تعذر جلب البيانات. الرجاء التأكد من أن الشيت منشور على الويب، وتحديث الصفحة.
+                    </div>`;
+                    return;
+                }
             }
+
+            const cleanText = csvText.replace(/\r/g, ''); 
+            const rawLines = cleanText.split('\n');
+
+            container.innerHTML = ''; 
+            let validCount = 0;
+
+            for (let i = 1; i < rawLines.length; i++) {
+                if (!rawLines[i] || rawLines[i].trim() === '') continue;
+                const row = splitCsvRow(rawLines[i]);
+                if (row.length < 2) continue;
+
+                let date = row[0] || '';
+                let cat = row[1] || '';
+                let title = row[2] || '';
+                let imgLink = '';
+
+                for (let cell of row) {
+                    if (cell && (cell.includes('http') || cell.includes('drive.google'))) {
+                        imgLink = cleanDriveLink(cell);
+                    }
+                }
+
+                if (!title && cat.length > 8) { title = cat; cat = 'تغطية مصورة'; }
+                if (!title || !imgLink) continue;
+
+                validCount++;
+                const bColor = getBadgeColor(cat);
+
+                const card = `
+                    <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 group">
+                        <div class="h-60 overflow-hidden relative bg-slate-100">
+                            <img src="${imgLink}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop'">
+                            <span class="absolute top-3 right-3 ${bColor} text-white text-xs font-bold px-3 py-1 rounded-full">${cat}</span>
+                            ${date ? `<span class="absolute bottom-3 left-3 bg-black/70 text-white text-[11px] px-2 py-0.5 rounded">${date}</span>` : ''}
+                        </div>
+                        <div class="p-5"><h3 class="font-black text-lg text-slate-800">${title}</h3></div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', card);
+            }
+            if (validCount === 0) container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً... أضف صوراً في شيت جوجل لتبدأ بالظهور هنا.</div>`;
         }
+        
         window.onload = loadLiveGallery;
     </script>
 </body>
