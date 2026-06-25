@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    
     <title>مدرسة الزيادة للتعليم الأساسي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -48,7 +46,7 @@
             <p class="text-base md:text-xl max-w-2xl mx-auto text-slate-300 mb-10 leading-relaxed font-medium">نجمع بين أصالة القيم التربوية وأحدث الأنظمة الإلكترونية، لنبني جيلاً واعياً، طموحاً، ومستعداً للمستقبل.</p>
             <div class="flex flex-wrap justify-center gap-4">
                 
-                <a href="https://ziyada-system.onrender.com/homework" target="_blank" class="bg-crimson hover:bg-red-700 text-white font-black px-8 py-4 rounded-xl text-lg shadow-xl transition flex items-center gap-3">
+                <a href="رابط_منظومة_الواجبات_هنا" target="_blank" class="bg-crimson hover:bg-red-700 text-white font-black px-8 py-4 rounded-xl text-lg shadow-xl transition flex items-center gap-3">
                     <i class="fa-solid fa-laptop-file text-2xl"></i><span>بوابة الواجبات والنتائج</span>
                 </a>
                 
@@ -93,7 +91,7 @@
             </div>
             <div id="gallery-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="col-span-1 md:col-span-3 text-center py-10 text-slate-500 font-bold">
-                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال المباشر بقاعدة البيانات...
+                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال بقاعدة البيانات...
                 </div>
             </div>
         </div>
@@ -127,7 +125,7 @@
             <div>
                 <h4 class="text-lg font-black mb-4 border-b border-slate-700 pb-2 inline-block text-blue-400">روابط المنظومة</h4>
                 <ul class="space-y-2 text-slate-300 font-medium">
-                    <li><a href="https://ziyada-system.onrender.com/homework" target="_blank" class="hover:text-gold transition flex items-center gap-2"><i class="fa-solid fa-arrow-left-long text-xs text-gold"></i> الواجبات اليومية والنتائج</a></li>
+                    <li><a href="رابط_منظومة_الواجبات_هنا" target="_blank" class="hover:text-gold transition flex items-center gap-2"><i class="fa-solid fa-arrow-left-long text-xs text-gold"></i> الواجبات اليومية والنتائج</a></li>
                 </ul>
             </div>
             <div>
@@ -149,79 +147,83 @@
             return 'bg-amber-500';
         }
 
-        // هذه الدالة ستقوم جوجل بتشغيلها تلقائياً عند جلب البيانات
-        window.processSheetData = function(response) {
+        function splitCsvRow(text) {
+            let p = '', entries = [];
+            let r = false;
+            for (let i = 0; i < text.length; i++) {
+                let c = text[i];
+                if (c === '"') { r = !r; }
+                else if (c === ',' && !r) { entries.push(p); p = ''; }
+                else { p += c; }
+            }
+            entries.push(p);
+            return entries.map(e => e.replace(/^"|"$/g, '').trim());
+        }
+
+        // الرابط النظيف لشيت جوجل (CSV) الخاص بك
+        const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
+
+        async function loadLiveGallery() {
             const container = document.getElementById('gallery-container');
-            container.innerHTML = ''; 
-
-            if (!response || !response.table || !response.table.rows || response.table.rows.length === 0) {
-                container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً... أضف صوراً في شيت جوجل لتبدأ بالظهور هنا.</div>`;
-                return;
-            }
-
-            const rows = response.table.rows;
-            let validCount = 0;
-
-            rows.forEach(row => {
-                if (!row.c) return;
-
-                // استخراج البيانات بأمان
-                const getVal = (idx) => (row.c.length > idx && row.c[idx] && row.c[idx].v !== null) ? String(row.c[idx].v).trim() : '';
-
-                let date = getVal(0);
-                let cat = getVal(1);
-                let title = getVal(2);
+            
+            try {
+                // خدعة بسيطة لتجاوز الكاش بدون استفزاز جدار الحماية في متصفحات الجوال
+                const fetchUrl = sheetCsvUrl + "&_t=" + new Date().getTime();
                 
-                // تخطي صف العناوين
-                if (title === 'العنوان' || cat === 'التصنيف') return;
-
-                let imgLink = '';
-                // البحث عن الرابط في أي خلية لتلافي أخطاء الإدخال
-                for(let i=0; i < row.c.length; i++) {
-                    let val = getVal(i);
-                    if(val.includes('http')) imgLink = val;
-                }
-
-                // إصلاح خطأ إذا كتبت المديرة العنوان مكان التصنيف
-                if (!title && cat.length > 8) { title = cat; cat = 'تغطية مصورة'; }
+                // اتصال بسيط جداً ومباشر (بدون Headers معقدة)
+                const res = await fetch(fetchUrl);
                 
-                // إذا لم يوجد عنوان أو صورة، نتخطى هذا الصف
-                if (!title || !imgLink) return;
+                if (!res.ok) throw new Error("تعذر الاتصال بالشيت");
+                
+                const csvText = await res.text();
+                const rawLines = csvText.replace(/\r/g, '').split('\n');
 
-                validCount++;
-                const bColor = getBadgeColor(cat);
-                const fallbackImg = "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop";
+                container.innerHTML = ''; 
+                let validCount = 0;
 
-                const cardHtml = `
-                    <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 group animate-fadeIn">
-                        <div class="h-60 overflow-hidden relative bg-slate-100">
-                            <img src="${imgLink}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='${fallbackImg}'">
-                            <span class="absolute top-3 right-3 ${bColor} text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">${cat}</span>
-                            ${date ? `<span class="absolute bottom-3 left-3 bg-black/70 text-white text-[11px] px-2 py-0.5 rounded">${date}</span>` : ''}
+                for (let i = 1; i < rawLines.length; i++) {
+                    if (!rawLines[i] || rawLines[i].trim() === '') continue;
+                    const row = splitCsvRow(rawLines[i]);
+                    if (row.length < 2) continue;
+
+                    let date = row[0] || '';
+                    let cat = row[1] || '';
+                    let title = row[2] || '';
+                    let imgLink = '';
+
+                    for (let cell of row) {
+                        if (cell && cell.includes('http')) {
+                            imgLink = cell.trim();
+                        }
+                    }
+
+                    if (!title && cat.length > 8) { title = cat; cat = 'تغطية مصورة'; }
+                    if (!title || !imgLink) continue;
+
+                    validCount++;
+                    const bColor = getBadgeColor(cat);
+                    const fallbackImg = "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop";
+
+                    const cardHtml = `
+                        <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 group animate-fadeIn">
+                            <div class="h-60 overflow-hidden relative bg-slate-100">
+                                <img src="${imgLink}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='${fallbackImg}'">
+                                <span class="absolute top-3 right-3 ${bColor} text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">${cat}</span>
+                                ${date ? `<span class="absolute bottom-3 left-3 bg-black/70 text-white text-[11px] px-2 py-0.5 rounded">${date}</span>` : ''}
+                            </div>
+                            <div class="p-5"><h3 class="font-black text-lg text-slate-800 leading-snug">${title}</h3></div>
                         </div>
-                        <div class="p-5"><h3 class="font-black text-lg text-slate-800 leading-snug">${title}</h3></div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', cardHtml);
-            });
-
-            if (validCount === 0) {
-                container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">البيانات غير مكتملة في الشيت. تأكد من وجود عنوان ورابط صورة.</div>`;
+                    `;
+                    container.insertAdjacentHTML('beforeend', cardHtml);
+                }
+                
+                if (validCount === 0) {
+                    container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً... أضف صوراً جديدة لتبدأ بالظهور.</div>`;
+                }
+            } catch (err) {
+                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 border border-red-200 text-red-800 font-bold p-6 rounded-xl">⚠️ يرجى تحديث الصفحة.</div>`;
+                console.error(err);
             }
-        };
-
-        function loadLiveGallery() {
-            // الآي دي الخاص بك
-            const sheetId = "17c-vOPL1SYs-y9WA5laAvINBXo3TMHQPhMgBvTtLb6g";
-            // استخدام JSONP لتخطي حماية CORS تماماً
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq&callback=processSheetData&_cb=${Date.now()}`;
-
-            const script = document.createElement('script');
-            script.src = url;
-            script.onerror = function() {
-                document.getElementById('gallery-container').innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">⚠️ تأكد من أن شيت جوجل (منشور على الويب).</div>`;
-            };
-            document.body.appendChild(script);
         }
 
         window.onload = loadLiveGallery;
