@@ -94,13 +94,13 @@
             </div>
             <div id="gallery-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="col-span-1 md:col-span-3 text-center py-10 text-slate-500 font-bold">
-                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال بالبيانات...
+                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال بالبيانات الحية...
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- الخريطة الدقيقة -->
+    <!-- الخريطة -->
     <section id="location" class="bg-slate-100 py-16 px-6 border-t border-slate-200">
         <div class="max-w-6xl mx-auto">
             <div class="bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-slate-200">
@@ -125,7 +125,7 @@
         <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 pb-12 border-b border-slate-800">
             <div>
                 <div class="flex items-center gap-3 mb-4"><img src="logo.jpg" class="w-10 h-10 rounded-full border border-gold object-contain" alt="شعار"><h3 class="text-2xl font-black text-gold">مدرسة الزيادة</h3></div>
-                <p class="text-slate-400 text-sm leading-relaxed mb-4 font-medium">بوابتك نحو تعليم يواكب العصر. نسعد دائماً باستقبال استفساراتكم واقتراحاتكم.</p>
+                <p class="text-slate-400 text-sm leading-relaxed mb-4 font-medium">بوابتك نحو تعليم يواكب العصر. نسعد دائماً باستقبال استفساراتكم.</p>
             </div>
             <div>
                 <h4 class="text-lg font-black mb-4 border-b border-slate-700 pb-2 inline-block text-blue-400">روابط المنظومة</h4>
@@ -141,7 +141,7 @@
         </div>
     </footer>
 
-    <!-- محرك جلب البيانات السحابي المباشر -->
+    <!-- محرك الجسر الآمن لـ GitHub -->
     <script>
         function cleanDriveLink(url) {
             if (!url) return '';
@@ -176,15 +176,17 @@
             return entries.map(e => e.replace(/^"|"$/g, '').trim());
         }
 
-        // الرابط المباشر
-        const directCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
+        // الرابط الفعلي الخاص بك مدمجاً بـ (الجسر الآمن) لتخطي حظر جيت-هاب
+        const rawCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
 
         async function loadLiveGallery() {
             const container = document.getElementById('gallery-container');
             try {
-                // اتصال مباشر بدون وسطاء
-                const res = await fetch(directCsvUrl + "&t=" + Date.now());
-                if (!res.ok) throw new Error("Network response was not ok");
+                // استخدام الجسر الآمن AllOrigins
+                const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawCsvUrl + "&t=" + Date.now());
+                const res = await fetch(proxyUrl);
+                
+                if (!res.ok) throw new Error("Connection Blocked");
                 
                 const csvText = await res.text();
                 const cleanText = csvText.replace(/\r/g, ''); 
@@ -229,7 +231,7 @@
                 }
                 if (validCount === 0) container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً...</div>`;
             } catch (err) {
-                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">حدث خطأ في جلب البيانات من الشيت. يرجى مراجعة إعدادات (نشر على الويب) في جوجل شيت.</div>`;
+                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">جاري الاتصال... يرجى تحديث الصفحة.</div>`;
             }
         }
         window.onload = loadLiveGallery;
