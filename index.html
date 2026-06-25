@@ -164,24 +164,47 @@
             return entries.map(e => e.replace(/^"|"$/g, '').trim());
         }
 
-        // استخدام واجهة مطوري جوجل المباشرة لفك الحظر (gviz/tq)
         const sheetId = "17c-vOPL1SYs-y9WA5laAvINBXo3TMHQPhMgBvTtLb6g";
-        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+        const directUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
 
         async function loadLiveGallery() {
             const container = document.getElementById('gallery-container');
-            try {
-                // الاتصال المباشر بجوجل
-                const res = await fetch(csvUrl + "&_t=" + Date.now(), { cache: 'no-store' });
-                if (!res.ok) throw new Error("Connection Blocked");
-                
-                const csvText = await res.text();
-                const rawLines = csvText.replace(/\r/g, '').split('\n');
+            const timeStamp = Date.now();
+            let csvText = '';
 
+            try {
+                // المحاولة 1: الاتصال المباشر (سريع جداً للكمبيوتر)
+                const res = await fetch(directUrl + "&_t=" + timeStamp, { cache: 'no-store' });
+                if (!res.ok) throw new Error();
+                csvText = await res.text();
+            } catch (e1) {
+                try {
+                    // المحاولة 2: تجاوز جدار حماية الجوال عبر سيرفر بروكسي 1
+                    const proxy1 = "https://api.allorigins.win/raw?url=" + encodeURIComponent(directUrl + "&_t=" + timeStamp);
+                    const res2 = await fetch(proxy1, { cache: 'no-store' });
+                    if (!res2.ok) throw new Error();
+                    csvText = await res2.text();
+                } catch (e2) {
+                    try {
+                        // المحاولة 3: بروكسي بديل قوي للطوارئ
+                        const proxy2 = "https://corsproxy.io/?" + encodeURIComponent(directUrl + "&_t=" + timeStamp);
+                        const res3 = await fetch(proxy2, { cache: 'no-store' });
+                        if (!res3.ok) throw new Error();
+                        csvText = await res3.text();
+                    } catch (e3) {
+                        // في حال فشل الجميع (لا يوجد إنترنت مثلاً)
+                        container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">⚠️ يرجى التأكد من اتصال الإنترنت وتحديث الصفحة.</div>`;
+                        return;
+                    }
+                }
+            }
+
+            // معالجة البيانات وبناء معرض الصور
+            try {
+                const rawLines = csvText.replace(/\r/g, '').split('\n');
                 container.innerHTML = ''; 
                 let validCount = 0;
 
-                // تجاوز صف العناوين الأول
                 for (let i = 1; i < rawLines.length; i++) {
                     if (!rawLines[i] || rawLines[i].trim() === '') continue;
                     const row = splitCsvRow(rawLines[i]);
@@ -192,11 +215,8 @@
                     let title = row[2] || '';
                     let imgLink = '';
 
-                    // البحث عن رابط الصورة من postimages
                     for (let cell of row) {
-                        if (cell && (cell.includes('http'))) {
-                            imgLink = cell.trim();
-                        }
+                        if (cell && cell.includes('http')) { imgLink = cell.trim(); }
                     }
 
                     if (!title && cat.length > 8) { title = cat; cat = 'تغطية مصورة'; }
@@ -204,7 +224,6 @@
 
                     validCount++;
                     const bColor = getBadgeColor(cat);
-                    // صورة بديلة في حال كان الرابط خاطئاً
                     const fallbackImg = "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop";
 
                     const card = `
@@ -223,8 +242,8 @@
                 if (validCount === 0) {
                     container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً... أضف صوراً في شيت جوجل لتبدأ بالظهور هنا.</div>`;
                 }
-            } catch (err) {
-                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">⚠️ يرجى الضغط على (Ctrl + F5) لتحديث ذاكرة المتصفح.</div>`;
+            } catch(e) {
+                console.error(e);
             }
         }
 
