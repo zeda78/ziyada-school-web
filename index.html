@@ -21,6 +21,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 selection:bg-navy selection:text-white">
 
+    <!-- شريط الاتصال -->
     <div class="bg-navy text-white text-xs md:text-sm py-2 px-4 border-b border-blue-900/50">
         <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <div class="flex items-center gap-3">
@@ -35,6 +36,7 @@
         </div>
     </div>
 
+    <!-- الترويسة -->
     <header class="relative bg-gradient-to-b from-navy via-navy/95 to-slate-900 text-white py-20 px-6 overflow-hidden">
         <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
         <div class="max-w-5xl mx-auto text-center relative z-10">
@@ -55,6 +57,7 @@
         </div>
     </header>
 
+    <!-- الإحصائيات -->
     <section class="max-w-6xl mx-auto -mt-10 px-4 relative z-20">
         <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center border border-slate-100">
             <div><div class="text-3xl md:text-4xl font-black text-navy mb-1">+450</div><div class="text-slate-500 text-sm font-bold">طالب وطالبة</div></div>
@@ -64,6 +67,7 @@
         </div>
     </section>
 
+    <!-- النبذة -->
     <section class="py-20 px-6 max-w-6xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
@@ -81,6 +85,7 @@
         </div>
     </section>
 
+    <!-- المعرض -->
     <section class="bg-slate-100 py-20 px-6">
         <div class="max-w-6xl mx-auto">
             <div class="text-center mb-16">
@@ -89,12 +94,13 @@
             </div>
             <div id="gallery-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="col-span-1 md:col-span-3 text-center py-10 text-slate-500 font-bold">
-                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال بالسيرفرات السحابية...
+                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال بالبيانات...
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- الخريطة الدقيقة -->
     <section id="location" class="bg-slate-100 py-16 px-6 border-t border-slate-200">
         <div class="max-w-6xl mx-auto">
             <div class="bg-white rounded-3xl shadow-xl p-6 md:p-10 border border-slate-200">
@@ -114,6 +120,7 @@
         </div>
     </section>
 
+    <!-- التذييل -->
     <footer class="bg-slate-900 text-white py-16 px-6">
         <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 pb-12 border-b border-slate-800">
             <div>
@@ -134,11 +141,11 @@
         </div>
     </footer>
 
+    <!-- محرك جلب البيانات السحابي المباشر -->
     <script>
         function cleanDriveLink(url) {
             if (!url) return '';
             url = url.trim();
-            // دعم روابط جوجل درايف (رغم أننا نفضل الروابط المباشرة مثل postimages)
             if (url.includes('drive.google.com')) {
                 let fileId = '';
                 if (url.includes('id=')) fileId = url.split('id=')[1].split('&')[0];
@@ -169,35 +176,17 @@
             return entries.map(e => e.replace(/^"|"$/g, '').trim());
         }
 
-        const rawCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
-
-        async function fetchResilientData() {
-            const buster = "?_t=" + Date.now();
-            const url1 = rawCsvUrl + buster;
-            const url2 = `https://corsproxy.io/?${encodeURIComponent(rawCsvUrl + buster)}`;
-            const url3 = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(rawCsvUrl + buster)}`;
-
-            const servers = [url1, url2, url3];
-
-            for (let targetUrl of servers) {
-                try {
-                    const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 4000);
-                    const res = await fetch(targetUrl, { signal: controller.signal });
-                    clearTimeout(timeout);
-                    if (res.ok) {
-                        const txt = await res.text();
-                        if (txt && txt.includes(',')) return txt;
-                    }
-                } catch (e) { console.log("جاري تجربة السيرفر البديل..."); }
-            }
-            throw new Error("جميع قنوات الجلب مغلقة");
-        }
+        // الرابط المباشر
+        const directCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
 
         async function loadLiveGallery() {
             const container = document.getElementById('gallery-container');
             try {
-                const csvText = await fetchResilientData();
+                // اتصال مباشر بدون وسطاء
+                const res = await fetch(directCsvUrl + "&t=" + Date.now());
+                if (!res.ok) throw new Error("Network response was not ok");
+                
+                const csvText = await res.text();
                 const cleanText = csvText.replace(/\r/g, ''); 
                 const rawLines = cleanText.split('\n');
 
@@ -240,7 +229,7 @@
                 }
                 if (validCount === 0) container.innerHTML = `<div class="col-span-3 text-center text-slate-400 font-bold py-10">الشيت فارغ حالياً...</div>`;
             } catch (err) {
-                container.innerHTML = `<div class="col-span-3 text-center bg-amber-50 text-amber-800 font-bold p-6 rounded-xl">جاري استرجاع البيانات، يرجى المحاولة بعد قليل.</div>`;
+                container.innerHTML = `<div class="col-span-3 text-center bg-red-50 text-red-800 font-bold p-6 rounded-xl">حدث خطأ في جلب البيانات من الشيت. يرجى مراجعة إعدادات (نشر على الويب) في جوجل شيت.</div>`;
             }
         }
         window.onload = loadLiveGallery;
