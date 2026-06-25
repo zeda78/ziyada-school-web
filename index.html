@@ -60,7 +60,7 @@
     <section class="max-w-6xl mx-auto -mt-10 px-4 relative z-20">
         <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center border border-slate-100">
             <div><div class="text-3xl md:text-4xl font-black text-navy mb-1">+450</div><div class="text-slate-500 text-sm font-bold">طالب وطالبة</div></div>
-            <div><div class="text-3xl md:text-4xl font-black text-crimson mb-1">+35</div><div class="text-slate-500 text-sm font-bold">كادر تعليمي خبير</div></div>
+            <div><div class="text-3xl md:text-4xl font-black text-crimson mb-1">+35</div><div class="text-slate-500 text-sm font-bold">كادر تعليم خبير</div></div>
             <div><div class="text-3xl md:text-4xl font-black text-gold mb-1">100%</div><div class="text-slate-500 text-sm font-bold">متابعة رقمية يومية</div></div>
             <div><div class="text-3xl md:text-4xl font-black text-emerald-600 mb-1">12</div><div class="text-slate-500 text-sm font-bold">فصلاً مجهزاً</div></div>
         </div>
@@ -91,7 +91,7 @@
             </div>
             <div id="gallery-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="col-span-1 md:col-span-3 text-center py-10 text-slate-500 font-bold">
-                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري الاتصال بقاعدة البيانات الآمنة...
+                    <i class="fa-solid fa-spinner animate-spin text-2xl ml-2 text-navy"></i> جاري جلب أحدث الصور...
                 </div>
             </div>
         </div>
@@ -139,18 +139,6 @@
     </footer>
 
     <script>
-        function cleanDriveLink(url) {
-            if (!url) return '';
-            url = url.trim();
-            if (url.includes('drive.google.com')) {
-                let fileId = '';
-                if (url.includes('id=')) fileId = url.split('id=')[1].split('&')[0];
-                else if (url.includes('/file/d/')) fileId = url.split('/file/d/')[1].split('/')[0];
-                if (fileId) return `https://docs.google.com/uc?export=view&id=${fileId}`;
-            }
-            return url;
-        }
-
         function getBadgeColor(cat) {
             if (!cat) return 'bg-amber-500';
             if (cat.includes('رحلة')) return 'bg-blue-600';
@@ -172,23 +160,17 @@
             return entries.map(e => e.replace(/^"|"$/g, '').trim());
         }
 
-        // الرابط الخاص بك
         const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTu5CaQA9yHwrQtsnCAbAHofx_F4v6Er1zmfm7lSeWwHSmIkmCN-Jxl4zpDVowCcQw5rwSOyxBthJ2A/pub?gid=0&single=true&output=csv";
 
         async function loadLiveGallery() {
             const container = document.getElementById('gallery-container');
             
-            // استخدام مسار /get الآمن بدلاً من /raw لتجاوز حماية المتصفحات
-            const secureProxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(sheetCsvUrl + "&_cb=" + new Date().getTime());
-
             try {
-                const res = await fetch(secureProxyUrl);
+                // اتصال مباشر وحيوي بدون وسطاء
+                const res = await fetch(sheetCsvUrl + "&_cb=" + new Date().getTime());
                 if (!res.ok) throw new Error("Fetch failed");
                 
-                const data = await res.json();
-                if (!data.contents) throw new Error("No data received");
-
-                const csvText = data.contents;
+                const csvText = await res.text();
                 const cleanText = csvText.replace(/\r/g, ''); 
                 const rawLines = cleanText.split('\n');
 
@@ -206,8 +188,8 @@
                     let imgLink = '';
 
                     for (let cell of row) {
-                        if (cell && (cell.includes('http') || cell.includes('drive.google'))) {
-                            imgLink = cleanDriveLink(cell);
+                        if (cell && cell.includes('http')) {
+                            imgLink = cell.trim();
                         }
                     }
 
@@ -216,8 +198,8 @@
 
                     validCount++;
                     const bColor = getBadgeColor(cat);
-                    
-                    // صورة بديلة في حال فشل رابط جوجل درايف
+
+                    // إذا كان الرابط معطوباً، ستظهر هذه الصورة كاحتياط لكي لا يتشوه الموقع
                     const fallbackImg = "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop";
 
                     const card = `
@@ -237,7 +219,7 @@
                 }
             } catch (err) {
                 container.innerHTML = `<div class="col-span-3 text-center bg-red-50 border border-red-200 text-red-800 font-bold p-6 rounded-xl">
-                    ⚠️ حدث خطأ في الاتصال. تأكد من نشر شيت جوجل على الويب كـ (CSV).
+                    ⚠️ يرجى التأكد من أن إعدادات مشاركة الشيت هي (أي شخص لديه الرابط).
                 </div>`;
             }
         }
