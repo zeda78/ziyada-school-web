@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الجدول الدراسي - مدرسة الزيادة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; padding: 20px; text-align: center; margin: 0; }
+        .container { background: white; max-width: 600px; margin: 40px auto; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 6px solid #f59e0b; }
+        h2 { color: #1e3a8a; font-weight: 900; }
+        select { width: 100%; padding: 12px; margin-top: 15px; margin-bottom: 20px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Cairo'; font-size: 16px; }
+        .btn-submit { background-color: #f59e0b; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { background-color: #d97706; }
+        .schedule-container { margin-top: 30px; display: none; } /* مخفي حتى يتم الاختيار */
+        .schedule-img { max-width: 100%; height: auto; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 15px; }
+        .error-msg { color: red; font-weight: bold; margin-top: 20px; display: none; background-color: #fee2e2; padding: 10px; border-radius: 6px; }
+        .btn-home { display: inline-block; margin-top: 20px; color: #1e3a8a; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>📅 عرض الجدول الدراسي</h2>
+        <p>الرجاء اختيار الصف والشعبة لعرض جدول الحصص</p>
+
+        <select id="className">
+            <option value="" disabled selected>اختر الصف...</option>
+            <option value="التمهيدي">التمهيدي</option> <option value="الأول">الأول</option> <option value="الثاني">الثاني</option> <option value="الثالث">الثالث</option> <option value="الرابع">الرابع</option> <option value="الخامس">الخامس</option> <option value="السادس">السادس</option> <option value="السابع">السابع</option> <option value="الثامن">الثامن</option> <option value="التاسع">التاسع</option>
+        </select>
+
+        <select id="sectionName">
+            <option value="" disabled selected>اختر الشعبة...</option>
+            <option value="أ">أ</option> <option value="ب">ب</option> <option value="ج">ج</option> <option value="د">د</option>
+        </select>
+
+        <!-- زر التشغيل يستدعي كود جافاسكريبت بالأسفل -->
+        <button onclick="showSchedule()" class="btn-submit">عرض الجدول</button>
+
+        <!-- مساحة عرض الصورة -->
+        <div id="scheduleContainer" class="schedule-container">
+            <h3 id="scheduleTitle" style="color: #1e3a8a;"></h3>
+            <img id="scheduleImage" src="" alt="جدول الحصص" class="schedule-img" onerror="handleImageError()">
+            <p id="errorMessage" class="error-msg">عذراً، لم يتم رفع جدول هذا الصف بعد.</p>
+        </div>
+        
+        <br>
+        <a href="index.html" class="btn-home">🏠 العودة للصفحة الرئيسية</a>
+    </div>
+
+    <!-- كود جافاسكريبت لجلب الصورة بدون تحميل الصفحة -->
+    <script>
+        function showSchedule() {
+            var className = document.getElementById("className").value;
+            var sectionName = document.getElementById("sectionName").value;
+
+            if (!className || !sectionName) {
+                alert("الرجاء اختيار الصف والشعبة أولاً!");
+                return;
+            }
+
+            // ربط اسم الصورة ليطابق مسار المجلد الذي أنشأناه
+            var imageName = "schedules/" + className + "_" + sectionName + ".jpg";
+
+            document.getElementById("scheduleTitle").innerText = "الجدول الدراسي للصف " + className + " - شعبة (" + sectionName + ")";
+            document.getElementById("scheduleImage").src = imageName;
+            document.getElementById("scheduleImage").style.display = "block";
+            document.getElementById("errorMessage").style.display = "none";
+            document.getElementById("scheduleContainer").style.display = "block";
+        }
+
+        function handleImageError() {
+            document.getElementById("scheduleImage").style.display = "none";
+            document.getElementById("errorMessage").style.display = "block";
+        }
+    </script>
+
+</body>
+</html>
